@@ -95,10 +95,10 @@ class Portal(ERC4626):
             return assets
 
     def value_portal_investments(self):
-        total_assets = 0
+        total_investments = 0
         for vault in self.sub_vaults:
-            total_assets += self.value_position(vault)
-        return total_assets
+            total_investments += self.value_position(vault)
+        return total_investments
 
     #### OVERRIDES ####
 
@@ -112,11 +112,13 @@ class Portal(ERC4626):
         pass
 
 
+# connect Fund to Reserve later when you want to have multiple funds operating
 class Fund(Portal):
-    def __init__(self, name, depositAsset, totalShares, totalAssets):
+    def __init__(self, name, depositAsset, totalShares, totalAssets, reserveRatio):
         super().__init__(name, depositAsset, totalShares, totalAssets)
+        self.reserveRatio = reserveRatio
 
 
-class Escrow:
+class Reserve:
     def __init__(self, cash):
         self.cash = cash

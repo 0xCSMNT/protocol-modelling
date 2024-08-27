@@ -72,8 +72,29 @@ def run_simulation():
 
     fund.deposit(1000)
 
-    print(f"Fund total assets: {fund.totalAssets}")
-    print(f"Fund cash: {fund.cash}")
+    print(f"Fund total assets: {fund.totalAssets} {USDC}")
+    print(f"Fund cash: {fund.cash} {USDC}")
+
+    cash_to_invest = fund.cash
+    for vault in fund.sub_vaults:
+        ratio = fund.sub_vaults[vault]["ratio"]
+        amount_to_invest = cash_to_invest * (ratio / 100)
+        fund.invest(vault, amount_to_invest)
+
+    print(f"Fund cash after investing: {fund.cash:.2f} {USDC}")
+    print(f"Fund total assets: {fund.totalAssets:.2f} {USDC}")
+
+    for portal_name, portal in portals.items():
+        print(f"\n{portal_name} Portal:")
+        print(f"  Total Assets: {portal.totalAssets:.2f} {USDC}")
+        print(f"  Cash: {portal.cash:.2f} {USDC}")
+        print(f"  Total Shares: {portal.totalShares:.2f}")
+        fund_shares = fund.sub_vaults[portal]["shares"]
+        print(f"  Fund's Shares: {fund_shares:.2f}")
+        fund_ratio = fund.sub_vaults[portal]["ratio"]
+        print(f"  Fund's Allocation Ratio: {fund_ratio}%")
+        portal_value = fund.value_position(portal)
+        print(f"  Fund's Position Value: {portal_value:.2f} {USDC}")
 
 
 if __name__ == "__main__":

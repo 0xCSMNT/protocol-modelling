@@ -31,8 +31,14 @@ class ERC4626:
         b = self.totalAssets
         t = self.totalShares
 
-        shares = a * t / b if b > 0 else a  # avoid division by zero
-        return shares
+        if b == 0 and t == 0:
+            shares = a
+            return shares
+
+        else:
+
+            shares = a * t / b if b > 0 else a  # avoid division by zero
+            return shares
 
     def convert_to_assets(self, shares):
         s = shares
@@ -43,8 +49,9 @@ class ERC4626:
         return assets
 
     def seed(self):
-        starting_balance = random.uniform(10, 100)
-        self.deposit(starting_balance)
+        starting_balance = random.uniform(1_000, 1_000_000)
+        self.totalAssets = starting_balance
+        self.totalShares = starting_balance
         operations = random.randint(1, 10)
 
         for i in range(operations):
@@ -52,6 +59,8 @@ class ERC4626:
                 self.deposit(random.randint(1, 10))
             else:
                 self.earn_interest(random.uniform(0, 1))
+
+        return self.totalAssets
 
     def earn_interest(self, percent):
         amount = self.totalAssets * percent / 100
@@ -68,14 +77,6 @@ class Portal(ERC4626):
         self.sub_vaults = {}
         self.cash = 0
 
-    @property
-    def totalAssets(self):
-        return self.value_portal_investments() + self.cash
-
-    @totalAssets.setter
-    def totalAssets(self, value):
-        self._totalAssets = value
-
     def add_vault(self, vault, ratio):
         if vault not in self.sub_vaults:
             self.sub_vaults[vault] = {"shares": 0, "ratio": ratio}
@@ -85,6 +86,7 @@ class Portal(ERC4626):
             shares = vault.deposit(assets)
             self.sub_vaults[vault]["shares"] += shares
             self.cash -= assets
+            self.update_total_assets()
             return shares
         else:
             raise ValueError("Vault not found in investments")
@@ -100,11 +102,16 @@ class Portal(ERC4626):
             total_investments += self.value_position(vault)
         return total_investments
 
+    def update_total_assets(self):
+        self.totalAssets = self.value_portal_investments() + self.cash
+        return self.totalAssets
+
     #### OVERRIDES ####
 
     def deposit(self, assets):
         self.cash += assets
-        shares = super().deposit(assets)
+        shares = ERC4626.deposit(self, assets)
+        self.update_total_assets()
         return shares
 
     # implement withdrawals later when you want to test that logic

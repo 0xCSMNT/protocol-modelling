@@ -1,5 +1,5 @@
 import unittest
-from src.components import ERC4626, Portal
+from src.components import ERC4626, Portal, Fund
 
 USDC = "USDC"
 
@@ -141,6 +141,53 @@ class TestPortal(unittest.TestCase):
         self.assertAlmostEqual(self.vault_a.totalAssets, vault_a_assets + 40)
         self.assertAlmostEqual(self.vault_b.totalAssets, vault_b_assets + 30)
         self.assertAlmostEqual(self.vault_c.totalAssets, vault_c_assets + 30)
+
+
+class TestFund(unittest.TestCase):
+    def setUp(self):
+        reserve_ratio = 10
+
+        self.fund1 = Fund("Test Fund 1", USDC, 0, 0, reserve_ratio)
+        self.fund2 = Fund("Test Fund 2", USDC, 0, 0, reserve_ratio)
+
+        self.vault_a = ERC4626("Test Vault A", USDC, 0, 0)
+        self.vault_b = ERC4626("Test Vault B", USDC, 0, 0)
+        self.vault_c = ERC4626("Test Vault C", USDC, 0, 0)
+
+        self.portal = Portal("Test Portal", USDC, 0, 0)
+
+        self.fund1.add_vault(self.vault_a, 40)
+        self.fund1.add_vault(self.vault_b, 30)
+        self.fund1.add_vault(self.vault_c, 30)
+
+        self.portal.add_vault(self.vault_a, 70)
+        self.portal.add_vault(self.vault_b, 15)
+        self.portal.add_vault(self.vault_c, 15)
+
+        self.fund2.add_vault(self.portal, 100)
+
+    def test_fund_adds_vaults(self):
+        self.assertEqual(len(self.fund1.sub_vaults), 3)
+
+        expected_vaults = [self.vault_a, self.vault_b, self.vault_c]
+        expected_ratios = [40, 30, 30]
+
+        for (vault, data), expected_vault, expected_ratio in zip(
+            self.fund1.sub_vaults.items(), expected_vaults, expected_ratios
+        ):
+            self.assertIn(vault, expected_vaults)
+            self.assertEqual(vault, expected_vault)
+            self.assertEqual(data["ratio"], expected_ratio)
+
+    def test_fund_adds_portal(self):
+        self.assertEqual(len(self.fund2.sub_vaults), 1)
+        self.assertIn(self.portal, self.fund2.sub_vaults)
+        self.assertEqual(self.fund2.sub_vaults[self.portal]["ratio"], 100)
+
+    def test_reserve_ratio(self):
+        self.fund1.deposit(100)
+        self.fund1.simple_rebalance()
+        self.assertEqual(self.fund1.cash, 100 * self.fund1.reserveRatio / 100)
 
 
 if __name__ == "__main__":

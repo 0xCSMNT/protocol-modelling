@@ -72,10 +72,11 @@ class ERC4626:
 
 
 class Portal(ERC4626):
-    def __init__(self, name, depositAsset, totalShares, totalAssets):
+    def __init__(self, name, depositAsset, totalShares, totalAssets, reserveRatio=0):
         super().__init__(name, depositAsset, totalShares, totalAssets)
         self.sub_vaults = {}
         self.cash = 0
+        self.reserveRatio = reserveRatio
 
     def add_vault(self, vault, ratio):
         if vault not in self.sub_vaults:
@@ -107,7 +108,7 @@ class Portal(ERC4626):
         return self.totalAssets
 
     def simple_rebalance(self):
-        excess_cash = self.cash
+        excess_cash = self.cash * (100 - self.reserveRatio) / 100
         for vault, data in self.sub_vaults.items():
             investment = excess_cash * data["ratio"] / 100
             self.invest(vault, investment)
@@ -125,13 +126,19 @@ class Portal(ERC4626):
         pass
 
 
-# connect Fund to Reserve later when you want to have multiple funds operating
+####################   FUND   ####################
+##################################################
+
+
 class Fund(Portal):
     def __init__(self, name, depositAsset, totalShares, totalAssets, reserveRatio):
-        super().__init__(name, depositAsset, totalShares, totalAssets)
-        self.reserveRatio = reserveRatio
+        super().__init__(name, depositAsset, totalShares, totalAssets, reserveRatio)
+
+
+##################   RESERVE   ###################
+##################################################
 
 
 class Reserve:
-    def __init__(self, cash):
-        self.cash = cash
+    def __init__(self, cash, reserveRatio):
+        pass

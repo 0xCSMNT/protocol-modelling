@@ -55,17 +55,13 @@ class TestPortal(unittest.TestCase):
         self.vault_b = ERC4626("Test Vault B", USDC, 0, 0)
         self.vault_c = ERC4626("Test Vault C", USDC, 0, 0)
 
-        vault_a_assets = self.vault_a.seed()
-        vault_b_assets = self.vault_b.seed()
-        vault_c_assets = self.vault_c.seed()
-
         self.portal = Portal("Test Portal", USDC, 0, 0)
 
-    def test_portal_init(self):
         self.portal.add_vault(self.vault_a, 40)
         self.portal.add_vault(self.vault_b, 30)
         self.portal.add_vault(self.vault_c, 30)
 
+    def test_portal_init(self):
         self.assertEqual(len(self.portal.sub_vaults), 3)
         expected_vaults = [self.vault_a, self.vault_b, self.vault_c]
         expected_ratios = [40, 30, 30]
@@ -80,8 +76,8 @@ class TestPortal(unittest.TestCase):
     def test_portal_deposits(self):
         deposit = 1234
         expected_shares = self.portal.convert_to_shares(deposit)
-        
-        # shares should equal deposit as new vault
+
+        # shares should equal deposit as vault is new
         self.assertEqual(deposit, expected_shares)
 
         self.portal.deposit(deposit)
@@ -97,6 +93,39 @@ class TestPortal(unittest.TestCase):
         self.assertEqual(deposit + deposit2, self.portal.totalAssets)
         self.assertEqual(deposit + deposit2, self.portal.totalShares)
         self.assertEqual(deposit + deposit2, self.portal.cash)
+
+    def test_portal_invest(self):
+        deposit = 100
+        self.portal.deposit(deposit)
+
+        vault_a_assets = self.vault_a.seed()
+        vault_b_assets = self.vault_b.seed()
+        vault_c_assets = self.vault_c.seed()
+
+        amount_to_invest = deposit
+        for vault, data in self.portal.sub_vaults.items():
+            investment = amount_to_invest * data["ratio"] / 100
+            self.portal.invest(vault, investment)
+
+        # assert all vault got the right amout of cash
+        self.assertEqual(self.vault_a.totalAssets, vault_a_assets + 40)
+        self.assertEqual(self.vault_b.totalAssets, vault_b_assets + 30)
+        self.assertEqual(self.vault_c.totalAssets, vault_c_assets + 30)
+
+        # assert portal has the right shares in each vault
+        for vault, data in self.portal.sub_vaults.items():
+            expected_investment = deposit * data["ratio"] / 100
+            self.assertAlmostEqual(
+                vault.convert_to_assets(data["shares"]), expected_investment
+            )
+
+        # assert portal has invested all cash
+        self.assertEqual(self.portal.cash, 0)
+
+        # check interal accounting functions
+        self.assertEqual(self.portal.value_position(self.vault_a), 40)
+        self.assertEqual(self.portal.totalAssets, 100)
+        self.assertEqual(self.portal.value_portal_investments(), deposit)
 
 
 if __name__ == "__main__":

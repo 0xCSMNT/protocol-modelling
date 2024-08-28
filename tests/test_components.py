@@ -123,9 +123,24 @@ class TestPortal(unittest.TestCase):
         self.assertEqual(self.portal.cash, 0)
 
         # check interal accounting functions
-        self.assertEqual(self.portal.value_position(self.vault_a), 40)
-        self.assertEqual(self.portal.totalAssets, 100)
-        self.assertEqual(self.portal.value_portal_investments(), deposit)
+        self.assertAlmostEqual(self.portal.value_position(self.vault_a), 40)
+        self.assertAlmostEqual(self.portal.totalAssets, 100)
+        self.assertAlmostEqual(self.portal.value_portal_investments(), deposit)
+
+    def test_simple_rebalance(self):
+        deposit = 100
+
+        vault_a_assets = self.vault_a.seed()
+        vault_b_assets = self.vault_b.seed()
+        vault_c_assets = self.vault_c.seed()
+
+        self.portal.deposit(deposit)
+        self.portal.simple_rebalance()
+
+        # assert all vault got the right amout of cash
+        self.assertAlmostEqual(self.vault_a.totalAssets, vault_a_assets + 40)
+        self.assertAlmostEqual(self.vault_b.totalAssets, vault_b_assets + 30)
+        self.assertAlmostEqual(self.vault_c.totalAssets, vault_c_assets + 30)
 
 
 if __name__ == "__main__":

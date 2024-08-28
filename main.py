@@ -75,7 +75,7 @@ def run_simulation():
     print(f"Fund total assets: {fund.totalAssets} {USDC}")
     print(f"Fund cash: {fund.cash} {USDC}")
 
-    cash_to_invest = fund.cash
+    cash_to_invest = fund.cash * (100 - fund.reserveRatio) / 100
     for vault in fund.sub_vaults:
         ratio = fund.sub_vaults[vault]["ratio"]
         amount_to_invest = cash_to_invest * (ratio / 100)
@@ -95,6 +95,19 @@ def run_simulation():
         print(f"  Fund's Allocation Ratio: {fund_ratio}%")
         portal_value = fund.value_position(portal)
         print(f"  Fund's Position Value: {portal_value:.2f} {USDC}")
+
+    for portal in portals.values():
+        portal.simple_rebalance()
+
+    print("\nAfter rebalancing:")
+    for portal_name, portal in portals.items():
+        print(f"\n{portal_name} Portal:")
+        print(f"  Total Assets: {portal.totalAssets:.2f} {USDC}")
+        print(f"  Cash: {portal.cash:.2f} {USDC}")
+        for vault, data in portal.sub_vaults.items():
+            print(f"    {vault.name}:")
+            print(f"      Shares: {data['shares']:.2f}")
+            print(f"      Value: {portal.value_position(vault):.2f} {USDC}")
 
 
 if __name__ == "__main__":

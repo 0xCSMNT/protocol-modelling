@@ -106,6 +106,12 @@ class Portal(ERC4626):
         self.totalAssets = self.value_portal_investments() + self.cash
         return self.totalAssets
 
+    def simple_rebalance(self):
+        excess_cash = self.cash
+        for vault, data in self.sub_vaults.items():
+            investment = excess_cash * data["ratio"] / 100
+            self.invest(vault, investment)
+
     #### OVERRIDES ####
 
     def deposit(self, assets):

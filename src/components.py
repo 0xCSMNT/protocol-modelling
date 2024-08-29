@@ -126,12 +126,14 @@ class Portal(ERC4626):
             rebalances = {}
             for vault, data in self.sub_vaults.items():
                 current_holdings = self.value_position(vault)
-                target_holdings = self.totalAssets * data['ratio'] / 100
+                target_holdings = self.totalAssets * data["ratio"] / 100
                 delta = target_holdings - current_holdings
                 if delta > 0 and delta > self.totalAssets * self.maxDelta / 100:
                     rebalances[vault] = min(delta, available_cash)
-            
-            sorted_rebalances = sorted(rebalances.items(), key=lambda x: x[1], reverse=True)
+
+            sorted_rebalances = sorted(
+                rebalances.items(), key=lambda x: x[1], reverse=True
+            )
 
             for vault, amount in sorted_rebalances:
                 if available_cash >= amount:
@@ -140,8 +142,6 @@ class Portal(ERC4626):
                 else:
                     self.invest(vault, available_cash)
                     break
-
-
 
         # excess_cash = self.cash * (100 - self.reserveRatio) / 100
         # for vault, data in self.sub_vaults.items():

@@ -5,24 +5,6 @@ import random
 random.seed(42)
 USDC = "USDC"
 
-# NOTES
-
-# the goal of the sim is to maximize capital efficiency
-# capital efficiency is achieved by returning the greatest possible return
-# for the invested capital after transaction costs
-
-# the protocol is a fund type structure that invests in a number of different interest-baring vaults
-# it executes a diversified strategy according to the goals of the asset manager
-# it receives capital from users that accumulates in a reserve and deposits them to into the 
-# yield baring vaults on the users behalf according to an algo
-# we want to make that algo as efficient as possible
-
-# there is a tradeoff between transaction cost, and lost interest due to idle capital
-# it should be a problem that has an optimal min/max
-# the optimal point will move depeding on market conditions and the state of the Fund
-# things like gas cost for transacting and trading fees/slippage influence costs
-
-# COMMENTS
 
 # initialize a number of vaults on 3 example protocols
 # each protocol has a number of vaults

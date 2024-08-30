@@ -114,18 +114,17 @@ class Portal(ERC4626):
     def simple_rebalance(self, cost=0):
         required_reserve = self.totalAssets * self.reserveRatio / 100
         available_cash = max(0, self.cash - required_reserve)
-        
+
         if available_cash > 0:
             for vault, data in self.sub_vaults.items():
                 target_investment = self.totalAssets * data["ratio"] / 100
                 current_investment = self.value_position(vault)
                 investment_needed = max(0, target_investment - current_investment)
-                
+
                 investment_amount = min(investment_needed, available_cash)
                 if investment_amount > 0:
                     self.invest(vault, investment_amount, cost)
                     available_cash -= investment_amount
-    
 
     def smart_rebalance(self, cost=0):
         required_reserve = self.totalAssets * self.reserveRatio / 100
@@ -150,8 +149,6 @@ class Portal(ERC4626):
                 else:
                     self.invest(vault, available_cash, cost)
                     break
-
-        
 
     #### OVERRIDES ####
 

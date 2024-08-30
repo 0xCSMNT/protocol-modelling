@@ -1,5 +1,10 @@
 # DeFi Protocol Optimization
 
+### Run Me:
+```
+python main.py
+```
+
 ## Project Overview
 
 This project simulates a DeFi (Decentralized Finance) protocol designed to optimize capital efficiency in a multi-vault investment strategy. The goal is to maximize returns on invested capital while minimizing transaction costs and idle capital.

@@ -69,14 +69,14 @@ The optimal solution minimizes the sum of these two costs, which varies based on
 
 ## Next Steps
 
-1. Add in DS libs for analysis.
-2. Develop performance metrics to evaluate different strategies.
-3. Add realistic transaction cost models - price depth on DEXs, swaps between collateral.
-4. Introduce market volatility and liquidity constraints to the simulation.
-5. Optimize the rebalancing algo, reserve ratio and add max tx size if neccessary
-6. Add in multiple funds and solver role that is looking for profitable opportunities to rebalance multiple funds
-7. Add in withdrawals and behavioural assumptions:
-    a. e.g if the market goes down x amount, we expected y withdrawals across all funds
+[ ] Add in DS libs for analysis.
+[x] Develop performance metrics to evaluate different strategies.
+[ ] Add realistic transaction cost models - price depth on DEXs, swaps between collateral.
+[ ] Introduce market volatility and liquidity constraints to the simulation.
+[ ] Optimize the rebalancing algo, reserve ratio and add max tx size if neccessary
+[ ] Add in multiple funds and solver role that is looking for profitable opportunities to rebalance multiple funds
+[ ] Add in withdrawals and behavioural assumptions:
+    - e.g if the market goes down x amount, we expected y withdrawals across all funds
 
 
 Expertise in optimization algorithms would be particularly valuable in refining the `smart_rebalance` method and developing more advanced allocation strategies that can adapt to changing market conditions.

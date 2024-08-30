@@ -86,9 +86,9 @@ class Portal(ERC4626):
         if vault not in self.sub_vaults:
             self.sub_vaults[vault] = {"shares": 0, "ratio": ratio}
 
-    def invest(self, vault, assets):
+    def invest(self, vault, assets, cost=0):
         if vault in self.sub_vaults:
-            shares = vault.deposit(assets)
+            shares = vault.deposit(assets - cost)
             self.sub_vaults[vault]["shares"] += shares
             self.cash -= assets
             self.update_total_assets()
@@ -111,15 +111,23 @@ class Portal(ERC4626):
         self.totalAssets = self.value_portal_investments() + self.cash
         return self.totalAssets
 
-    def simple_rebalance(self):
+    def simple_rebalance(self, cost=0):
         required_reserve = self.totalAssets * self.reserveRatio / 100
-        if self.cash > required_reserve:
-            total_assets = self.totalAssets
+        available_cash = max(0, self.cash - required_reserve)
+        
+        if available_cash > 0:
             for vault, data in self.sub_vaults.items():
-                investment = total_assets * data["ratio"] / 100
-                self.invest(vault, investment)
+                target_investment = self.totalAssets * data["ratio"] / 100
+                current_investment = self.value_position(vault)
+                investment_needed = max(0, target_investment - current_investment)
+                
+                investment_amount = min(investment_needed, available_cash)
+                if investment_amount > 0:
+                    self.invest(vault, investment_amount, cost)
+                    available_cash -= investment_amount
+    
 
-    def smart_rebalance(self):
+    def smart_rebalance(self, cost=0):
         required_reserve = self.totalAssets * self.reserveRatio / 100
         available_cash = max(0, self.cash - required_reserve)
         if available_cash > 0:
@@ -137,19 +145,13 @@ class Portal(ERC4626):
 
             for vault, amount in sorted_rebalances:
                 if available_cash >= amount:
-                    self.invest(vault, amount)
+                    self.invest(vault, amount, cost)
                     available_cash -= amount
                 else:
-                    self.invest(vault, available_cash)
+                    self.invest(vault, available_cash, cost)
                     break
 
-        # excess_cash = self.cash * (100 - self.reserveRatio) / 100
-        # for vault, data in self.sub_vaults.items():
-        #     investment = excess_cash * data["ratio"] / 100
-        #     if investment < self.totalAssets * self.maxDelta / 100:
-        #         pass
-        #     else:
-        #         self.invest(vault, investment)
+        
 
     #### OVERRIDES ####
 

@@ -5,13 +5,6 @@ import random
 random.seed(42)
 USDC = "USDC"
 
-
-# initialize a number of vaults on 3 example protocols
-# each protocol has a number of vaults
-# these are bundled together in a Portal contract on a per protocol basis
-# the Portal stores data about what ratio to invest funds into each of the 
-# vaults on the protocol
-
 protocols = [
     {"name": "Centrifuge", "vaults": 3, "ratios": [40, 30, 30]},
     {"name": "Morpho", "vaults": 2, "ratios": [60, 40]},
@@ -19,69 +12,62 @@ protocols = [
 ]
 
 def main():
-    initialized_vaults = initialize_vaults(protocols)
-    portals = create_portals(initialized_vaults, protocols)
+    initialized_vaults = initialize_vaults(protocols)      
 
-    cfg_portal = portals["Centrifuge"]
-    morpho_portal = portals["Morpho"]
-    yearn_portal = portals["Yearn"]
+    fund1 = Fund("Smart Fund", USDC, 0, 0, 10, 1)
+    fund2 = Fund("Simple Fund", USDC, 0, 0, 10, 1)
+    fund3 = Fund("Smart Fund without Gas Cost", USDC, 0, 0, 10, 1)
+    fund4 = Fund("Simple Fund without Gas Cost", USDC, 0, 0, 10, 1)
 
-    # a Fund contract is created that sits above the Portal
-    # it has data about:
-    # 1. a certain % of reserve cash it needs to maintain for fast withdrawal
-    # 2. a certain % max delta that assets are allowed to deviate from their defined ratios
+    for fund in [fund1, fund2, fund3, fund4]:
+        fund.add_vault(initialized_vaults[0], 40)
+        fund.add_vault(initialized_vaults[1], 30)
+        fund.add_vault(initialized_vaults[2], 30)
+        fund.deposit(1000)
+        fund.simple_rebalance()
 
-    fund = Fund("USab", USDC, 0, 0, 10, 1)
+    days = 365 * 5   
+    transaction_cost = 0.005811 
 
-    fund.add_vault(cfg_portal, 30)
-    fund.add_vault(morpho_portal, 30)
-    fund.add_vault(yearn_portal, 30)
-
-    # we initialize by deposited 1000 to the fund
-    fund.deposit(1000)
-
-    # we call simple rebalance to distribute funds to each Portal according to their ratios
-    fund.simple_rebalance()
-
-    # within each portal we call simple rebalance to deposit funds into each vault according to their ratios
-    for portal in portals.values():
-        portal.simple_rebalance()
-
-
-    #### SIMULATION ####
-
-    # assume 5 years of rebalancing
-    days = 365 * 5
-
-    print(f"Starting long-term simulation for {days} days...")
-
-    # every day the fund gets a random deposit of between 1,000 and 100,000
-    # this is distributed to each portal by a smart rebalance algo
-    # smart rebalance will only deposit to a portal when it's actual value has deviated 
-    # from the defined ratio by more than the maxDelta 
     for day in range(days):
         daily_deposit = random.randint(1_000, 100_000)
-        fund.deposit(daily_deposit)
-        fund.smart_rebalance()
         
-        # simple rebalance from the portals into the vaults
-        for portal in portals.values():
-            portal.simple_rebalance()
+        for fund in [fund1, fund2, fund3, fund4]:
+            fund.deposit(daily_deposit)
         
-        for vault in initialized_vaults:
-            vault.earn_interest(random.randint(1, 10) / 365 / 10)
+        fund1.smart_rebalance(transaction_cost)
+        fund2.simple_rebalance(transaction_cost)
+        fund3.smart_rebalance()
+        fund4.simple_rebalance()
 
-        if day % 30 == 0:  # Print update every 30 days
-            print(f"Day {day}: Fund total assets: {fund.totalAssets:.2f}")
+        for vault in fund1.sub_vaults:
+            daily_interest = random.randint(1, 10) / 365 / 10
+            vault.earn_interest(daily_interest)
 
-    print("\nFinal state after long-term simulation:")
-    print(f"Fund total assets: {fund.totalAssets:.2f}")
-    print(f"Fund cash: {fund.cash:.2f}")
-    for portal, data in fund.sub_vaults.items():
-        print(f"  {portal.name} value: {fund.value_position(portal):.2f}")
+    funds = [fund1, fund2, fund3, fund4]
 
     
+    fund_names = ["Smart Fund 1", "Simple Fund 2", "Smart Fund without Gas Cost 3", "Simple Fund without Gas Cost 4"]
+    ranked_funds = sorted(funds, key=lambda x: x.totalAssets, reverse=True)
 
+    print("\nFunds Ranked by Total Assets:")
+    for rank, fund in enumerate(ranked_funds, start=1):
+        print(f"{rank}. {fund.name}")
+
+    for fund, name in zip(funds, fund_names):
+        print(f"\n{name}:")
+        print(f"Fund total assets: {fund.totalAssets:,.2f}")
+        print(f"Fund cash: {fund.cash:,.2f}")
+        print(f"Percentage: {fund.cash / fund.totalAssets:.18f}")
+    
+    funds = [fund2, fund3, fund4]  
+
+    for i, fund in enumerate(funds, start=2): 
+        print(f"\nDelta vs {fund.name}:") 
+        print(f"\nDelta abs: {fund.totalAssets - fund1.totalAssets:.2f}")
+        print(f"Delta %: {(fund.totalAssets - fund1.totalAssets) / fund.totalAssets * 100:.18f}")
+
+    print("\n")
 
 if __name__ == "__main__":
     main()
